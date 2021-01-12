@@ -9,6 +9,7 @@ import numpy as np
 from collections import namedtuple
 
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
+from kogpt2_transformers import get_kogpt2_model, get_kogpt2_tokenizer
 
 from functools import partial
 
@@ -45,16 +46,22 @@ def rindex(mylist, myvalue):
     return len(mylist) - mylist[::-1].index(myvalue) - 1
 
 
-def init_gpt2_model(checkpoint_dir, args, model_class, tokenizer_class=None):
+def init_gpt2_model(checkpoint_dir, args, model_class=None, tokenizer_class=None):
     """Load a trained model and vocabulary that you have fine-tuned."""
 
-    model = model_class.from_pretrained(checkpoint_dir)
-    model.to(args.device)
+    if model_class is None:
+       model = get_kogpt2_model(checkpoint_dir)
+       model.to(args.device)
+       tokenizer = get_kogpt2_tokenizer(checkpoint_dir)
 
-    if tokenizer_class:
-        tokenizer = tokenizer_class.from_pretrained(checkpoint_dir, do_lower_case=args.do_lower_case)
     else:
-        tokenizer = None
+       model = model_class.from_pretrained(checkpoint_dir)
+       model.to(args.device)
+
+       if tokenizer_class:
+           tokenizer = tokenizer_class.from_pretrained(checkpoint_dir, do_lower_case=args.do_lower_case)
+       else:
+           tokenizer = None
 
     return GPT2ParentModule(args=args, gpt2=model), tokenizer
 

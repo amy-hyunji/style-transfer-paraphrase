@@ -21,6 +21,17 @@ BASE_CONFIG = {
     "max_dense_length": 2
 }
 
+KOBERT_CONFIG = {
+   "keys": [
+      {"key": "sent1_tokens", "position": 0, "tokenize": True, "metadata": False},
+      {"key": "sent2_tokens", "position": 1, "tokenize": True, "metadata": False},
+   ],
+   "max_total_length": MAX_PARAPHRASE_LENGTH,
+   "max_prefix_length": int(MAX_PARAPHRASE_LENGTH/2),
+   "max_suffix_length": int(MAX_PARAPHRASE_LENGTH/2),
+   "max_dense_length": 2
+}
+
 DATASET_CONFIG = {
     "datasets/paranmt_filtered": BASE_CONFIG,
     "datasets/shakespeare": BASE_CONFIG,
@@ -37,7 +48,8 @@ DATASET_CONFIG = {
     "datasets/shakespeare": BASE_CONFIG,
     "datasets/coha_3_bins_1810s-1820s": BASE_CONFIG,
     "datasets/coha_3_bins_1890s-1900s": BASE_CONFIG,
-    "datasets/coha_3_bins_1990s-2000s": BASE_CONFIG
+    "datasets/coha_3_bins_1990s-2000s": BASE_CONFIG,
+    "datasets/conversation": KOBERT_CONFIG
 }
 
 # Fill in DATASET_CONFIG with keys it was missing previously

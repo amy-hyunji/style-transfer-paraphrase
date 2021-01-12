@@ -12,7 +12,7 @@ from style_paraphrase.utils import init_gpt2_model
 
 
 class GPT2Generator(object):
-    def __init__(self, model_path, upper_length="eos", beam_size=1, top_p=0.0):
+    def __init__(self, model_path, upper_length="eos", is_korean=False, beam_size=1, top_p=0.0):
         self.model_path = model_path
         self.args = torch.load("{}/training_args.bin".format(self.model_path))
         self.modify_args(upper_length, beam_size, top_p)
@@ -38,8 +38,8 @@ class GPT2Generator(object):
 
         self.gpt2_model, self.tokenizer = init_gpt2_model(checkpoint_dir=model_path,
                                                           args=self.args,
-                                                          model_class=GPT2LMHeadModel,
-                                                          tokenizer_class=GPT2Tokenizer)
+                                                          model_class=None if is_korean else GPT2LMHeadModel,
+                                                          tokenizer_class=None if is_korean else GPT2Tokenizer)
 
     def modify_args(self, upper_length, beam_size, top_p):
         args = self.args
@@ -90,7 +90,6 @@ class GPT2Generator(object):
 
             instance.gdv = global_dense_vectors
             instances.append(instance)
-
         output, _, scores = self.gpt2_model.generate(
             gpt2_sentences=torch.tensor([inst.sentence for inst in instances]).to(args.device),
             segments=torch.tensor([inst.segment for inst in instances]).to(args.device),
@@ -115,8 +114,9 @@ class GPT2Generator(object):
                 curr_out = curr_out[:len(instance.sent1_tokens) + extra]
 
             all_output.append(
-                tokenizer.decode(curr_out, clean_up_tokenization_spaces=True, skip_special_tokens=True)
+               tokenizer.decode(curr_out, clean_up_tokenization_spaces=True, skip_special_tokens=True)
             )
+            print(f"output: {all_output[-1]}")
 
         return all_output, scores
 

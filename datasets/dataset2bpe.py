@@ -4,7 +4,7 @@ import torch
 import tqdm
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', type=str, default=None)
+parser.add_argument('--dataset', type=str, default="abstract")
 args = parser.parse_args()
 
 roberta = torch.hub.load('pytorch/fairseq', 'roberta.base')

@@ -343,6 +343,7 @@ def get_offsets(input_file, num_workers):
 def cli_main():
     parser = options.get_preprocessing_parser()
     args = parser.parse_args()
+    print(args)
     main(args)
 
 

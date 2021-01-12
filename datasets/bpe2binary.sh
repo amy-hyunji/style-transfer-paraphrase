@@ -17,4 +17,5 @@ fairseq-preprocess \
     --workers 24 \
     --srcdict $ROBERTA_LARGE/dict.txt
 
-cp ${FOLDERNAME}-bin/label/dict.txt ${FOLDERNAME}-bin/dict.txt
+cp ./datasets/abstract-bin/label/dict.txt ./datasets/abstract-bin/dict.txt
+#cp ${FOLDERNAME}-bin/label/dict.txt ${FOLDERNAME}-bin/dict.txt

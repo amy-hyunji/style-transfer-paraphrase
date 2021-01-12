@@ -11,19 +11,19 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--batch_size", default=64, type=int,
                     help="Batch size for inference.")
 parser.add_argument('--dataset', type=str, default=None)
-parser.add_argument('--model_dir', default="paraphraser_gpt2_large", type=str)
+parser.add_argument('--model_dir', default="/home/hyunji/style-transfer-paraphrase/style_paraphrase/saved_models/test_paraphrase/checkpoint-45183", type=str)
 parser.add_argument('--paraphrase_str', default="paraphrase_250", type=str)
 parser.add_argument('--top_p_value', default=0.0, type=float)
 args = parser.parse_args()
 
-roberta = torch.hub.load('pytorch/fairseq', 'roberta.base')
+roberta = torch.hub.load('pytorch/fairseq', 'roberta.base', force_reload=True)
 
 if not torch.cuda.is_available():
     print("Please check if a GPU is available or your Pytorch installation is correct.")
     sys.exit()
 
 print("Loading paraphraser...")
-paraphraser = GPT2Generator(args.model_dir, upper_length="same_5")
+paraphraser = GPT2Generator(args.model_dir, upper_length="same_5", is_korean=True)
 paraphraser.modify_p(top_p=args.top_p_value)
 
 

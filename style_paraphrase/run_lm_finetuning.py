@@ -42,6 +42,7 @@ from style_dataset import (InverseParaphraseDatasetText,
                            ParaphraseDatasetText)
 from transformers import (WEIGHTS_NAME, AdamW, GPT2Config, GPT2LMHeadModel,
                           GPT2Tokenizer, get_linear_schedule_with_warmup)
+from kogpt2_transformers import get_kogpt2_model, get_kogpt2_tokenizer
 
 from utils import GPT2ParentModule, init_gpt2_model
 
@@ -262,8 +263,10 @@ def train(args, gpt2_model, train_dataset, tokenizer):
 
                 if args.local_rank in [-1, 0] and args.logging_steps > 0 and global_step % args.logging_steps == 0:
                     # Only evaluate when single GPU otherwise metrics may not average well
-                    if args.local_rank == -1 and args.evaluate_during_training:
+#                    if args.local_rank == -1 and args.evaluate_during_training:
+                    if args.evaluate_during_training:
                         results = evaluate(args, gpt2_model, tokenizer)
+                        print(f"##### [eval_{key}] value: {value}, global_step: {global_step}")
                         for key, value in results.items():
                             tb_writer.add_scalar('eval_{}'.format(key), value, global_step)
 
@@ -386,19 +389,28 @@ def main():
         # Barrier to make sure only the first process in distributed training download model & vocab
         torch.distributed.barrier()
 
-    config_class, model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
-    config = config_class.from_pretrained(args.config_name if args.config_name else args.model_name_or_path,
-                                          cache_dir=args.cache_dir if args.cache_dir else None)
-    # Adding an extra embedding dimension for style/content vectors
-    config.extra_embedding_dim = args.extra_embedding_dim
-    tokenizer = tokenizer_class.from_pretrained(args.tokenizer_name if args.tokenizer_name else args.model_name_or_path,
-                                                do_lower_case=args.do_lower_case,
-                                                cache_dir=args.cache_dir if args.cache_dir else None)
+    if args.model_type == "gpt2":
+       print("##### loading model type GPT2")
+       config_class, model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
+       config = config_class.from_pretrained(args.config_name if args.config_name else args.model_name_or_path,
+                                             cache_dir=args.cache_dir if args.cache_dir else None)
+       # Adding an extra embedding dimension for style/content vectors
+       config.extra_embedding_dim = args.extra_embedding_dim
+       tokenizer = tokenizer_class.from_pretrained(args.tokenizer_name if args.tokenizer_name else args.model_name_or_path,
+                                                   do_lower_case=args.do_lower_case,
+                                                   cache_dir=args.cache_dir if args.cache_dir else None)
 
-    model = model_class.from_pretrained(args.model_name_or_path,
-                                        from_tf=bool('.ckpt' in args.model_name_or_path),
-                                        config=config,
-                                        cache_dir=args.cache_dir if args.cache_dir else None)
+       model = model_class.from_pretrained(args.model_name_or_path,
+                                           from_tf=bool('.ckpt' in args.model_name_or_path),
+                                           config=config,
+                                           cache_dir=args.cache_dir if args.cache_dir else None)
+    else:
+       print("##### loading model type koGPT2")
+       model = get_kogpt2_model()
+       tokenizer = get_kogpt2_tokenizer()
+       model_class = None   
+       tokenizer_class = None   
+
     tokenizer.add_special_tokens(SPECIAL_TOKENS)
     model.resize_token_embeddings(len(tokenizer))
 
