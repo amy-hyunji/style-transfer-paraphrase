@@ -100,6 +100,10 @@ class GPT2Generator(object):
             interpolation=interpolation,
             top_p=top_p
         )
+        """
+        output = self.gpt2_model.generate(input_ids=torch.tensor([inst.sentence for inst in instances]).to(args.device), do_sample=True, max_length=100, num_return_sequences=top_p)
+        score = 0
+        """
 
         all_output = []
         for out_num in range(len(output)):

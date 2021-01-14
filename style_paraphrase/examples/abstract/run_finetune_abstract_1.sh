@@ -17,11 +17,11 @@ BASE_DIR=style_paraphrase
 
 python -m torch.distributed.launch --nproc_per_node=1 $BASE_DIR/run_lm_finetuning.py \
     --output_dir=$BASE_DIR/saved_models/model_abstract_1 \
-    --model_type=gpt2 \
+    --model_type=kogpt2 \
     --model_name_or_path=gpt2-large \
     --do_train \
     --data_dir=$DATA_DIR \
-    --save_steps 500 \
+    --save_steps 50 \
     --logging_steps 20 \
     --save_total_limit -1 \
     --evaluate_during_training \

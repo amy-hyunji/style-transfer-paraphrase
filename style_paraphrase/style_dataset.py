@@ -55,6 +55,7 @@ class ParaphraseDatasetText(Dataset):
             with open(cached_features_file, "rb") as handle:
                 self.examples = pickle.load(handle)
         else:
+            print(f"READING FROM!!! {data_dir}/{split}.pickle")
             with open("{}/{}.pickle".format(data_dir, split), "rb") as handle:
                 parse_data = pickle.load(handle)
 
@@ -65,7 +66,8 @@ class ParaphraseDatasetText(Dataset):
 
             logger.info("Saving features into cached file %s", cached_features_file)
             with open(cached_features_file, "wb") as handle:
-                pickle.dump(self.examples, handle, protocol=pickle.HIGHEST_PROTOCOL)
+               print(self.examples[:10])
+               pickle.dump(self.examples, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         # in case we are using a fraction of the dataset, reduce the size of the dataset here
         self.examples = limit_dataset_size(self.examples, args.limit_examples)

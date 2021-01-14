@@ -266,9 +266,9 @@ def train(args, gpt2_model, train_dataset, tokenizer):
 #                    if args.local_rank == -1 and args.evaluate_during_training:
                     if args.evaluate_during_training:
                         results = evaluate(args, gpt2_model, tokenizer)
-                        print(f"##### [eval_{key}] value: {value}, global_step: {global_step}")
                         for key, value in results.items():
                             tb_writer.add_scalar('eval_{}'.format(key), value, global_step)
+                            print(f"##### [eval_{key}] value: {value}, global_step: {global_step}")
 
                     tb_writer.add_scalar('learning_rate', scheduler.get_lr()[0], global_step)
 
@@ -363,6 +363,7 @@ def main():
     if (os.path.exists(args.output_dir) and os.listdir(args.output_dir) and args.do_train and not args.overwrite_output_dir):
         raise ValueError("Output directory ({}) already exists and is not empty. Use --overwrite_output_dir to overcome.".format(args.output_dir))
 
+    args.local_rank = -1
     # Setup CUDA, GPU & distributed training
     if args.local_rank == -1 or args.no_cuda:
         device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")

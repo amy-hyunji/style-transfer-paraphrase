@@ -24,7 +24,7 @@ class Instance(object):
         self.truncate()
         # whenever args.prefix_input_type has "original_shuffle" or "original_reverse"
         # exchange prefix/suffix with 50% probability or 100% probability
-        self.shuffle_prefix_suffix()
+        #### self.shuffle_prefix_suffix()
         # Finally, perform prefix and suffix padding to build the sentence, label and segments
         self.build_sentence(tokenizer)
         self.build_label(tokenizer)
@@ -136,6 +136,7 @@ def right_padding(data, pad_token, total_length):
 
 
 def string_to_ids(text, tokenizer):
+    text = str(text)
     return tokenizer.convert_tokens_to_ids(tokenizer.tokenize(text))
 
 

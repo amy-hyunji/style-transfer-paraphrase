@@ -49,7 +49,13 @@ DATASET_CONFIG = {
     "datasets/coha_3_bins_1810s-1820s": BASE_CONFIG,
     "datasets/coha_3_bins_1890s-1900s": BASE_CONFIG,
     "datasets/coha_3_bins_1990s-2000s": BASE_CONFIG,
-    "datasets/conversation": KOBERT_CONFIG
+    "datasets/conversation": KOBERT_CONFIG,
+    "datasets/abstract": BASE_CONFIG,
+    "datasets/possstag": KOBERT_CONFIG,
+    "datasets/para_and_pos": KOBERT_CONFIG,
+    "datasets/random_pos": KOBERT_CONFIG,
+    "datasets/random_pos_tone": KOBERT_CONFIG,
+    "datasets/sample_random_pos_tone": KOBERT_CONFIG,
 }
 
 # Fill in DATASET_CONFIG with keys it was missing previously

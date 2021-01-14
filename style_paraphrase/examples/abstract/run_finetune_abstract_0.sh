@@ -11,6 +11,8 @@
 # Experiment Details :- GPT2-large model for shakespeare.
 # Run Details :- accumulation = 2, batch_size = 5, beam_size = 1, cpus = 3, dataset = datasets/shakespeare, eval_batch_size = 1, global_dense_feature_list = none, gpu = m40, learning_rate = 5e-5, memory = 50, model_name = gpt2-large, ngpus = 1, num_epochs = 3, optimizer = adam, prefix_input_type = paraphrase_250, save_steps = 500, save_total_limit = -1, specific_style_train = 0, stop_token = eos
 
+### save_steps = original 500
+
 export DATA_DIR=datasets/abstract
 
 BASE_DIR=style_paraphrase
@@ -33,5 +35,5 @@ python -m torch.distributed.launch --nproc_per_node=1 $BASE_DIR/run_lm_finetunin
     --prefix_input_type paraphrase_250 \
     --global_dense_feature_list none \
     --specific_style_train 0 \
-    --optimizer adam
-
+    --optimizer adam \
+    --overwrite_output_dir

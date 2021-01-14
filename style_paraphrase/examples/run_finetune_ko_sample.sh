@@ -11,14 +11,14 @@
 # Experiment Details :- GPT2-large model for paraphrasing.
 # Run Details :- accumulation = 2, batch_size = 5, beam_size = 1, cpus = 3, dataset = datasets/paranmt_filtered, eval_batch_size = 1, global_dense_feature_list = none, gpu = m40, learning_rate = 5e-5, memory = 50, model_name = gpt2-large, ngpus = 1, num_epochs = 3, optimizer = adam, prefix_input_type = original, save_steps = 500, save_total_limit = -1, specific_style_train = -1, stop_token = eos
 
-export DATA_DIR=datasets/random_pos_tone
+export DATA_DIR=datasets/sample_random_pos_tone
 
 source style-venv/bin/activate
 
 BASE_DIR=style_paraphrase
 
 python -m torch.distributed.launch --nproc_per_node=1 $BASE_DIR/run_lm_finetuning.py \
-    --output_dir=$BASE_DIR/saved_models/random_pos_tone \
+    --output_dir=$BASE_DIR/saved_models/sample_random_pos_tone \
     --model_type=kogpt2 \
     --model_name_or_path=gpt2-large \
     --data_dir=$DATA_DIR \
@@ -27,10 +27,10 @@ python -m torch.distributed.launch --nproc_per_node=1 $BASE_DIR/run_lm_finetunin
     --logging_steps 20 \
     --save_total_limit -1 \
     --evaluate_during_training \
-    --num_train_epochs 3 \
+    --num_train_epochs 6 \
     --gradient_accumulation_steps 2 \
     --per_gpu_train_batch_size 5 \
-    --job_id random_pos_tone \
+    --job_id sample_random_pos_tone \
     --learning_rate 5e-5 \
     --prefix_input_type original \
     --global_dense_feature_list none \
