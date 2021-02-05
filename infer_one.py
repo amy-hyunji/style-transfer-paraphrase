@@ -3,7 +3,6 @@ import torch
 import numpy as np
 import os
 import argparse
-import torch
 import tqdm 
 import pandas as pd
 

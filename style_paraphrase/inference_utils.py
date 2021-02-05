@@ -120,7 +120,7 @@ class GPT2Generator(object):
             all_output.append(
                tokenizer.decode(curr_out, clean_up_tokenization_spaces=True, skip_special_tokens=True)
             )
-            print(f"output: {all_output[-1]}")
+            # print(f"output: {all_output[-1]}")
 
         return all_output, scores
 
