@@ -138,9 +138,11 @@ def save_model(gpt2_model, output_dir, args, global_step, tokenizer=None):
     with open(os.path.join(output_dir, "global_step.txt"), "w") as f:
         f.write(str(global_step) + "\n")
 
+    """
     if tokenizer:
         tokenizer.save_pretrained(output_dir)
-
+    """
+    
 
 def train(args, gpt2_model, train_dataset, tokenizer):
     """ Train the model """
