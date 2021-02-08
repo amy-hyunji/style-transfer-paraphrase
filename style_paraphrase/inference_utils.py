@@ -36,7 +36,7 @@ class GPT2Generator(object):
 
                 self.global_dense_features.append((gdf, final_vectors))
 
-        self.gpt2_model, self.tokenizer = init_gpt2_model(checkpoint_dir=model_path,
+        self.gpt2_model, self.tokenizer, self.vocab = init_gpt2_model(checkpoint_dir=model_path,
                                                           args=self.args,
                                                           model_class=None if is_korean else GPT2LMHeadModel,
                                                           tokenizer_class=None if is_korean else GPT2Tokenizer)
@@ -65,7 +65,9 @@ class GPT2Generator(object):
             global_dense_features = [None for _ in contexts]
 
         for context, gdf in zip(contexts, global_dense_features):
-            context_ids = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(context))
+            #context_ids = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(context))
+            toked = self.tokenizer(context)
+            context_ids = torch.tensor([self.vocab[toked]]) 
 
             # NOTE - For model_110, use the older version of the code
             # The following code is only compatible with the newer models
@@ -73,7 +75,7 @@ class GPT2Generator(object):
                 self.args, self.config,
                 {"sent1_tokens": context_ids, "sent2_tokens": context_ids}
             )
-            instance.preprocess(tokenizer)
+            instance.preprocess(tokenizer, self.vocab)
 
             if gdf is not None and self.args.global_dense_feature_list != "none":
                 if self.global_dense_features:

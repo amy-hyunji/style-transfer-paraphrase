@@ -19,16 +19,16 @@ class Instance(object):
         self.sent2_tokens = np.array(instance_dict["sent2_tokens"], dtype=np.int32)
         self.init_context_size = config["max_prefix_length"] + 1
 
-    def preprocess(self, tokenizer):
+    def preprocess(self, tokenizer, vocab):
         # shorten the very long sequences in the instance based on DATASET_CONFIG
         self.truncate()
         # whenever args.prefix_input_type has "original_shuffle" or "original_reverse"
         # exchange prefix/suffix with 50% probability or 100% probability
-        #### self.shuffle_prefix_suffix()
+        self.shuffle_prefix_suffix()
         # Finally, perform prefix and suffix padding to build the sentence, label and segments
-        self.build_sentence(tokenizer)
-        self.build_label(tokenizer)
-        self.build_segment(tokenizer)
+        self.build_sentence(tokenizer, vocab)
+        self.build_label(tokenizer, vocab)
+        self.build_segment(tokenizer, vocab)
         # check if the padding worked out correctly and all the lengths are aligned
         self.check_constraints()
 
@@ -55,24 +55,24 @@ class Instance(object):
         elif self.args.prefix_input_type == "original_reverse":
             self.sent1_tokens, self.sent2_tokens = self.sent2_tokens, self.sent1_tokens
 
-    def build_sentence(self, tokenizer):
+    def build_sentence(self, tokenizer, vocab):
         self.sent_prefix = left_padding(
-            self.sent1_tokens, tokenizer.pad_token_id, self.config["max_prefix_length"]
+            self.sent1_tokens, vocab[vocab.padding_token], self.config["max_prefix_length"]
         )
 
         self.sent_suffix = right_padding(
-            np.append(self.sent2_tokens, tokenizer.eos_token_id),
-            tokenizer.pad_token_id,
+            np.append(self.sent2_tokens, vocab[vocab.eos_token]),
+            vocab[vocab.padding_token],
             self.config["max_suffix_length"] + 1
         )
         self.sentence = np.concatenate(
-            [self.sent_prefix, [tokenizer.bos_token_id], self.sent_suffix]
+            [self.sent_prefix, [vocab[vocab.bos_token]], self.sent_suffix]
         )
 
-    def build_label(self, tokenizer):
+    def build_label(self, tokenizer, vocab):
         dense_length = self.config["global_dense_length"]
         self.label_suffix = right_padding(
-            np.append(self.sent2_tokens, tokenizer.eos_token_id),
+            np.append(self.sent2_tokens, vocab[vocab.eos_token]),
             -100,
             self.config["max_suffix_length"] + 1
         )
@@ -83,13 +83,15 @@ class Instance(object):
             self.label_suffix
         ]).astype(np.int64)
 
-    def build_segment(self, tokenizer):
+    def build_segment(self, tokenizer, vocab):
+        additional_special_tokens = ["<dense-vectors>", "<tokens>", "<verb>"]
+        #print(f"ids of .. <dense-vectors>: {vocab[additional_special_tokens[0]]}\n'<tokens>': {vocab[additional_special_tokens[1]]}\n'<verb>': {vocab[additional_special_tokens[2]]}\n'unk': {vocab[vocab.unknown_token]}")
         dense_length = self.config["global_dense_length"]
-        prefix_segment = [tokenizer.additional_special_tokens_ids[1] for _ in self.sent_prefix]
-        suffix_segment_tag = tokenizer.additional_special_tokens_ids[2]
+        prefix_segment = [vocab[additional_special_tokens[1]] for _ in self.sent_prefix]
+        suffix_segment_tag = vocab[additional_special_tokens[2]]
 
         self.segment = np.concatenate([
-            [tokenizer.additional_special_tokens_ids[0] for _ in range(dense_length)],
+            [vocab[additional_special_tokens[0]] for _ in range(dense_length)],
             prefix_segment,
             [suffix_segment_tag],
             [suffix_segment_tag for _ in self.sent_suffix],

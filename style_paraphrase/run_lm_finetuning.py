@@ -42,7 +42,11 @@ from style_dataset import (InverseParaphraseDatasetText,
                            ParaphraseDatasetText)
 from transformers import (WEIGHTS_NAME, AdamW, GPT2Config, GPT2LMHeadModel,
                           GPT2Tokenizer, get_linear_schedule_with_warmup)
-from kogpt2_transformers import get_kogpt2_model, get_kogpt2_tokenizer
+
+#from kogpt2_transformers import get_kogpt2_model, get_kogpt2_tokenizer
+from KoGPT2.kogpt2.pytorch_kogpt2 import get_pytorch_kogpt2_model
+from gluonnlp.data import SentencepieceTokenizer
+from KoGPT2.kogpt2.utils import get_tokenizer
 
 from utils import GPT2ParentModule, init_gpt2_model
 
@@ -66,7 +70,7 @@ SPECIAL_TOKENS = {
 }
 
 
-def load_and_cache_examples(args, tokenizer, evaluate=False):
+def load_and_cache_examples(args, tokenizer, evaluate=False, vocab=None):
     if not args.prefix_input_type.startswith("original"):
         dataset = InverseParaphraseDatasetText(
             tokenizer=tokenizer,
@@ -79,7 +83,8 @@ def load_and_cache_examples(args, tokenizer, evaluate=False):
             tokenizer=tokenizer,
             args=args,
             evaluate=evaluate,
-            split="dev" if evaluate else "train"
+            split="dev" if evaluate else "train",
+            vocab=vocab
         )
     return dataset
 
@@ -157,6 +162,7 @@ def train(args, gpt2_model, train_dataset, tokenizer):
 
     # Update the model definition in case RoBERTa is training
     model = gpt2_model.gpt2
+    vocab = gpt2_model.vocab
 
     # Prepare optimizer and schedule (linear warmup and decay)
     # extra layer_norm.weight for com
@@ -265,7 +271,7 @@ def train(args, gpt2_model, train_dataset, tokenizer):
                     # Only evaluate when single GPU otherwise metrics may not average well
 #                    if args.local_rank == -1 and args.evaluate_during_training:
                     if args.evaluate_during_training:
-                        results = evaluate(args, gpt2_model, tokenizer)
+                        results = evaluate(args, gpt2_model, tokenizer, vocab=vocab)
                         for key, value in results.items():
                             tb_writer.add_scalar('eval_{}'.format(key), value, global_step)
                             print(f"##### [eval_{key}] value: {value}, global_step: {global_step}")
@@ -304,11 +310,11 @@ def train(args, gpt2_model, train_dataset, tokenizer):
     return global_step, loss_metrics["lm"]["current"] / global_step
 
 
-def evaluate(args, gpt2_model, tokenizer, prefix=""):
+def evaluate(args, gpt2_model, tokenizer, prefix="", vocab=None):
     # Loop to handle MNLI double evaluation (matched, mis-matched)
     eval_output_dir = args.output_dir
 
-    eval_dataset = load_and_cache_examples(args, tokenizer, evaluate=True)
+    eval_dataset = load_and_cache_examples(args, tokenizer, evaluate=True, vocab=vocab)
 
     if not os.path.exists(eval_output_dir) and args.local_rank in [-1, 0]:
         os.makedirs(eval_output_dir)
@@ -400,6 +406,7 @@ def main():
        tokenizer = tokenizer_class.from_pretrained(args.tokenizer_name if args.tokenizer_name else args.model_name_or_path,
                                                    do_lower_case=args.do_lower_case,
                                                    cache_dir=args.cache_dir if args.cache_dir else None)
+       tokenizer.add_special_tokens(SPECIAL_TOKENS)
 
        model = model_class.from_pretrained(args.model_name_or_path,
                                            from_tf=bool('.ckpt' in args.model_name_or_path),
@@ -407,17 +414,21 @@ def main():
                                            cache_dir=args.cache_dir if args.cache_dir else None)
     else:
        print("##### loading model type koGPT2")
+       """
        model = get_kogpt2_model()
        tokenizer = get_kogpt2_tokenizer()
        model_class = None   
        tokenizer_class = None   
+       """
+       tok_path = get_tokenizer()
+       tokenizer = SentencepieceTokenizer(tok_path, num_best=0, alpha=00)
+       model, vocab = get_pytorch_kogpt2_model()
 
-    tokenizer.add_special_tokens(SPECIAL_TOKENS)
     model.resize_token_embeddings(len(tokenizer))
 
     model.to(args.device)
 
-    gpt2_model = GPT2ParentModule(args=args, gpt2=model)
+    gpt2_model = GPT2ParentModule(args=args, gpt2=model, vocab=vocab)
 
     if args.local_rank == 0:
         torch.distributed.barrier()  # End of barrier to make sure only the first process in distributed training download model & vocab
@@ -429,7 +440,7 @@ def main():
         if args.local_rank not in [-1, 0]:
             torch.distributed.barrier()  # Barrier to make sure only the first process in distributed training process the dataset, and the others will use the cache
 
-        train_dataset = load_and_cache_examples(args, tokenizer, evaluate=False)
+        train_dataset = load_and_cache_examples(args, tokenizer, evaluate=False, vocab=vocab)
 
         if args.local_rank == 0:
             torch.distributed.barrier()
@@ -444,7 +455,7 @@ def main():
             os.makedirs(output_dir)
         save_model(gpt2_model, output_dir, args, global_step, tokenizer)
 
-        gpt2_model, tokenizer = init_gpt2_model(checkpoint_dir=args.output_dir,
+        gpt2_model, tokenizer, vocab = init_gpt2_model(checkpoint_dir=args.output_dir,
                                                 args=args,
                                                 model_class=model_class,
                                                 tokenizer_class=tokenizer_class)
@@ -479,11 +490,11 @@ def main():
             for checkpoint in checkpoints:
                 prefix = checkpoint.split('/')[-1] if checkpoint.find('checkpoint') != -1 else ""
 
-                gpt2_model, _ = init_gpt2_model(checkpoint_dir=checkpoint,
+                gpt2_model, tokenizer, vocab = init_gpt2_model(checkpoint_dir=checkpoint,
                                                 args=args,
                                                 model_class=model_class)
 
-                result = evaluate(args, gpt2_model, tokenizer, prefix=prefix)
+                result = evaluate(args, gpt2_model, tokenizer, prefix=prefix, vocab=vocab)
                 all_results[checkpoint] = result["perplexity"]
 
             sorted_results = [(k, v) for k, v in all_results.items()]

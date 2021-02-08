@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 class ParaphraseDatasetText(Dataset):
-    def __init__(self, tokenizer, args, evaluate=False, split="train"):
+    def __init__(self, tokenizer, args, evaluate=False, split="train", vocab=None):
         data_dir = args.data_dir
         self.args = args
 
@@ -79,7 +79,7 @@ class ParaphraseDatasetText(Dataset):
 
         for instance in self.examples:
             # perform truncation, padding, label and segment building
-            instance.preprocess(tokenizer)
+            instance.preprocess(tokenizer, vocab)
 
         num_truncated = sum([x.truncated for x in self.examples])
         logger.info(

@@ -9,12 +9,15 @@ import numpy as np
 from collections import namedtuple
 
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
-from kogpt2_transformers import get_kogpt2_model, get_kogpt2_tokenizer
+#from kogpt2_transformers import get_kogpt2_model, get_kogpt2_tokenizer
+from KoGPT2.kogpt2.pytorch_kogpt2 import get_pytorch_kogpt2_model
+from gluonnlp.data import SentencepieceTokenizer
+from KoGPT2.kogpt2.utils import get_tokenizer
 
 from functools import partial
 
-from style_paraphrase.dataset_config import DATASET_CONFIG
-from style_paraphrase.data_utils import update_config, Instance
+from dataset_config import DATASET_CONFIG
+from data_utils import update_config, Instance
 
 MODEL_CLASSES = {
     'gpt2': (GPT2LMHeadModel, GPT2Tokenizer)
@@ -50,9 +53,17 @@ def init_gpt2_model(checkpoint_dir, args, model_class=None, tokenizer_class=None
     """Load a trained model and vocabulary that you have fine-tuned."""
 
     if model_class is None:
+       """
        model = get_kogpt2_model(checkpoint_dir)
        model.to(args.device)
        tokenizer = get_kogpt2_tokenizer(checkpoint_dir)
+       """
+       print("Loading Tokenizer..")
+       tok_path = get_tokenizer()
+       tokenizer = SentencepieceTokenizer(tok_path, num_best=0, alpha=0)
+       print("Loading Model..")
+       model, vocab = get_pytorch_kogpt2_model()
+       model.to(args.device)
 
     else:
        model = model_class.from_pretrained(checkpoint_dir)
@@ -62,15 +73,17 @@ def init_gpt2_model(checkpoint_dir, args, model_class=None, tokenizer_class=None
            tokenizer = tokenizer_class.from_pretrained(checkpoint_dir, do_lower_case=args.do_lower_case)
        else:
            tokenizer = None
+       vocab = None
 
-    return GPT2ParentModule(args=args, gpt2=model), tokenizer
+    return GPT2ParentModule(args=args, gpt2=model), tokenizer, vocab
 
 
 class GPT2ParentModule(nn.Module):
-    def __init__(self, args, gpt2):
+    def __init__(self, args, gpt2, vocab):
         super(GPT2ParentModule, self).__init__()
         self.args = args
         self.gpt2 = gpt2
+        self.vocab = vocab
 
     def forward(self, batch):
         args = self.args
