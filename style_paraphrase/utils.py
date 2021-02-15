@@ -75,7 +75,7 @@ def init_gpt2_model(checkpoint_dir, args, model_class=None, tokenizer_class=None
            tokenizer = None
        vocab = None
 
-    return GPT2ParentModule(args=args, gpt2=model), tokenizer, vocab
+    return GPT2ParentModule(args=args, gpt2=model, vocab=vocab), tokenizer, vocab
 
 
 class GPT2ParentModule(nn.Module):

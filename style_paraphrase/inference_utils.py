@@ -5,10 +5,10 @@ import numpy as np
 
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 
-from style_paraphrase.dataset_config import DATASET_CONFIG, BASE_CONFIG
-from style_paraphrase.data_utils import update_config, Instance, get_label_dict
+from dataset_config import DATASET_CONFIG, BASE_CONFIG
+from data_utils import update_config, Instance, get_label_dict
 
-from style_paraphrase.utils import init_gpt2_model
+from utils import init_gpt2_model
 
 
 class GPT2Generator(object):
@@ -67,7 +67,7 @@ class GPT2Generator(object):
         for context, gdf in zip(contexts, global_dense_features):
             #context_ids = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(context))
             toked = self.tokenizer(context)
-            context_ids = torch.tensor([self.vocab[toked]]) 
+            context_ids = torch.tensor(self.vocab[toked]) 
 
             # NOTE - For model_110, use the older version of the code
             # The following code is only compatible with the newer models
@@ -97,7 +97,7 @@ class GPT2Generator(object):
             segments=torch.tensor([inst.segment for inst in instances]).to(args.device),
             global_dense_vectors=torch.tensor([inst.gdv for inst in instances]).to(args.device),
             init_context_size=instances[0].init_context_size,
-            eos_token_id=tokenizer.eos_token_id,
+            eos_token_id=self.vocab[self.vocab.eos_token],
             get_scores=get_scores,
             interpolation=interpolation,
             top_p=top_p
@@ -112,8 +112,8 @@ class GPT2Generator(object):
             instance = instances[out_num]
             curr_out = output[out_num, instance.init_context_size:].tolist()
 
-            if tokenizer.eos_token_id in curr_out:
-                curr_out = curr_out[:curr_out.index(tokenizer.eos_token_id)]
+            if self.vocab[self.vocab.eos_token] in curr_out:
+                curr_out = curr_out[:curr_out.index(self.vocab[self.vocab.eos_token])]
 
             if self.args.upper_length.startswith("same"):
                 extra = int(self.args.upper_length.split("_")[-1])

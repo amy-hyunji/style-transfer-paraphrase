@@ -60,7 +60,7 @@ class ParaphraseDatasetText(Dataset):
                 parse_data = pickle.load(handle)
 
             self.examples = [
-                datum_to_dict(self.config, datum, tokenizer)
+                datum_to_dict(self.config, datum, tokenizer, vocab)
                 for datum in tqdm.tqdm(parse_data)
             ]
 

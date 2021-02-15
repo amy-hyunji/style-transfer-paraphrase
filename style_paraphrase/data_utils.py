@@ -2,6 +2,7 @@ import logging
 import numpy as np
 import pickle
 import random
+import torch
 
 MAX_ROBERTA_LENGTH = 502
 
@@ -137,10 +138,11 @@ def right_padding(data, pad_token, total_length):
     return np.pad(data, (0, tokens_to_pad), constant_values=pad_token)
 
 
-def string_to_ids(text, tokenizer):
+def string_to_ids(text, tokenizer, vocab):
     text = str(text)
-    return tokenizer.convert_tokens_to_ids(tokenizer.tokenize(text))
-
+    #return tokenizer.convert_tokens_to_ids(tokenizer.tokenize(text))
+    toked = tokenizer(text)
+    return vocab[toked]
 
 def get_label_dict(data_dir):
     label_dict = {}
@@ -195,14 +197,14 @@ def limit_styles(dataset, specific_style_train, split, reverse_label_dict):
     return dataset
 
 
-def datum_to_dict(config, datum, tokenizer):
+def datum_to_dict(config, datum, tokenizer, vocab):
     """Convert a data point to the instance dictionary."""
 
     instance_dict = {"metadata": ""}
 
     for key in config["keys"]:
         element_value = datum[key["position"]]
-        instance_dict[key["key"]] = string_to_ids(element_value, tokenizer) if key["tokenize"] else element_value
+        instance_dict[key["key"]] = string_to_ids(element_value, tokenizer, vocab) if key["tokenize"] else element_value
         if key["metadata"]:
             instance_dict["metadata"] += "%s = %s, " % (key["key"], str(element_value))
     # strip off trailing , from metadata

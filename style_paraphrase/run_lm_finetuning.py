@@ -425,6 +425,9 @@ def main():
        tok_path = get_tokenizer()
        tokenizer = SentencepieceTokenizer(tok_path, num_best=0, alpha=00)
        model, vocab = get_pytorch_kogpt2_model()
+       model_class = None
+       tokenizer_class = None
+
 
     model.resize_token_embeddings(len(tokenizer))
 
