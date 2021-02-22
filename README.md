@@ -1,6 +1,10 @@
-# Reformulating Unsupervised Style Transfer as Paraphrase Generation (EMNLP 2020)
+# Reformulating Unsupervised Style Transfer as Paraphrase Generation (EMNLP 2020) -> Revised to Korean Ver. (한국어 버전)
 
-This is the official repository accompanying the EMNLP 2020 long paper [Reformulating Unsupervised Style Transfer as Paraphrase Generation](https://arxiv.org/abs/2010.05700). This repository contains the accompanying dataset and codebase.
+**기존의 GPT2를 KoGPT2로 수정**
+* Works in both transformers 4.0 and 3.0
+* Use KoGPT2 model from [kogpt2-transformers](https://github.com/taeminlee/KoGPT2-Transformers)
+
+This is the **revised repo from official repository for usage in KOREAN** accompanying the EMNLP 2020 long paper [Reformulating Unsupervised Style Transfer as Paraphrase Generation](https://arxiv.org/abs/2010.05700). This repository contains the accompanying dataset and codebase.
 
 This repository is a work-in-progress, but we have released several models, evaluation scripts, training code and demos.
 
